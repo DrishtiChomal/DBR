@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBR Calculator — Dubai Mortgage Eligibility</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #f0ede6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; padding: 40px 20px; }
+  .container { max-width: 480px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+  .title { font-size: 26px; font-weight: 600; color: #f0ede6; line-height: 1.2; }
+  .title span { color: #c9a84c; }
+  .subtitle { font-size: 13px; color: #444; margin-top: 5px; }
+  .by-line { font-size: 11px; color: #333; text-align: right; line-height: 1.7; }
+  .by-line strong { color: #c9a84c; display: block; }
+  .toggle-row { display: flex; background: #111; border: 1px solid #1a1a1a; border-radius: 8px; padding: 4px; margin-bottom: 12px; }
+  .toggle-row button { flex: 1; padding: 10px; font-size: 12px; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: transparent; color: #444; }
+  .toggle-row button.active { background: #c9a84c; color: #0a0a0a; font-weight: 700; }
+  .section-label { font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #333; margin: 20px 0 12px; }
+  .input-row { margin-bottom: 10px; }
+  .input-row label { display: block; font-size: 12px; color: #555; margin-bottom: 5px; }
+  .input-wrap { position: relative; }
+  .input-wrap .prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #444; pointer-events: none; }
+  .input-wrap input, .input-wrap select { width: 100%; background: #111; border: 1px solid #1a1a1a; color: #f0ede6; font-size: 14px; padding: 10px 12px 10px 48px; border-radius: 6px; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  .input-wrap input:focus, .input-wrap select:focus { border-color: #c9a84c; }
+  .input-wrap input::placeholder { color: #2a2a2a; }
+  .input-wrap.pct input { padding-left: 36px; }
+  .input-wrap.no-prefix input, .input-wrap.no-prefix select { padding-left: 12px; }
+  .helper { font-size: 10px; color: #2a2a2a; margin-top: 3px; }
+  .hidden { display: none; }
+  .self-emp-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .self-emp-result { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #111; }
+  .self-emp-label { font-size: 11px; color: #555; }
+  .self-emp-value { font-size: 16px; font-weight: 700; color: #c9a84c; }
+  .debt-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .debt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .debt-row label { font-size: 12px; color: #555; flex: 1; }
+  .debt-row .input-wrap { width: 160px; flex-shrink: 0; }
+  .new-mortgage-box { background: #0d0d0d; border: 1px solid #c9a84c22; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .new-mortgage-title { font-size: 9px; color: #7a6230; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .divider { height: 1px; background: #151515; margin: 24px 0; }
+
+  /* Not eligible card */
+  .not-eligible-card { display: none; background: rgba(226,75,74,0.06); border: 1px solid rgba(226,75,74,0.3); border-radius: 10px; padding: 24px; margin-bottom: 10px; }
+  .ne-title { font-size: 18px; font-weight: 700; color: #E24B4A; margin-bottom: 6px; }
+  .ne-subtitle { font-size: 12px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+  .ne-row { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 0; border-bottom: 1px solid rgba(226,75,74,0.1); }
+  .ne-row:last-of-type { border-bottom: none; }
+  .ne-key { color: #666; }
+  .ne-val { font-weight: 600; }
+  .ne-val.red { color: #E24B4A; }
+  .ne-val.gold { color: #c9a84c; }
+  .ne-gap { font-size: 13px; font-weight: 700; color: #E24B4A; margin: 12px 0; }
+  .ne-note { font-size: 11px; color: #444; margin-top: 6px; line-height: 1.6; }
+
+  /* Results */
+  .result-card { display: none; }
+  .result-card.visible { display: block; }
+  .dbr-gauge { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 10px; padding: 20px; margin-bottom: 10px; text-align: center; }
+  .dbr-gauge-label { font-size: 9px; color: #333; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+  .dbr-number { font-size: 56px; font-weight: 700; line-height: 1; }
+  .dbr-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 6px; margin-top: 8px; }
+  .dbr-bar-wrap { margin: 16px 0 8px; background: #111; border-radius: 4px; height: 8px; overflow: hidden; }
+  .dbr-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .dbr-bar-labels { display: flex; justify-content: space-between; font-size: 9px; color: #333; margin-top: 4px; }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .metric-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px 14px; }
+  .metric-label { font-size: 9px; color: #333; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+  .metric-val { font-size: 18px; font-weight: 700; color: #f0ede6; }
+  .metric-val.gold { color: #c9a84c; }
+  .metric-val.red { color: #E24B4A; }
+  .metric-val.green { color: #1D9E75; }
+  .metric-sub { font-size: 10px; color: #333; margin-top: 3px; }
+  .bdown { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .bdown-title { font-size: 9px; color: #333; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .bdown-row { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 0; border-bottom: 1px solid #111; }
+  .bdown-row:last-child { border-bottom: none; }
+  .bdown-key { color: #444; }
+  .bdown-val { color: #666; font-weight: 500; }
+  .bdown-row.total .bdown-key { color: #c9a84c; font-weight: 600; }
+  .bdown-row.total .bdown-val { color: #c9a84c; font-weight: 700; }
+  .bdown-row.highlight .bdown-key { color: #888; }
+  .bdown-row.highlight .bdown-val { color: #f0ede6; font-weight: 600; }
+  .verdict-box { border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+  .verdict-box.danger { border: 1px solid rgba(226,75,74,0.3); background: rgba(226,75,74,0.06); }
+  .verdict-box.warning { border: 1px solid rgba(239,159,39,0.3); background: rgba(239,159,39,0.06); }
+  .verdict-box.safe { border: 1px solid rgba(29,158,117,0.3); background: rgba(29,158,117,0.06); }
+  .verdict-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .verdict-box.danger .verdict-title { color: #E24B4A; }
+  .verdict-box.warning .verdict-title { color: #EF9F27; }
+  .verdict-box.safe .verdict-title { color: #1D9E75; }
+  .verdict-desc { font-size: 12px; color: #666; line-height: 1.7; }
+  .tips-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .tips-title { font-size: 9px; color: #333; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .tip-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #111; align-items: flex-start; }
+  .tip-row:last-child { border-bottom: none; }
+  .tip-number { font-size: 11px; font-weight: 700; color: #c9a84c; min-width: 20px; }
+  .tip-text { font-size: 12px; color: #666; line-height: 1.6; }
+  .eligibility-box { background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .eligibility-title { font-size: 9px; color: #333; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .elig-row { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 0; border-bottom: 1px solid #111; }
+  .elig-row:last-child { border-bottom: none; }
+  .elig-key { color: #444; }
+  .elig-val { color: #c9a84c; font-weight: 600; }
+  .cta-btn { width: 100%; background: #c9a84c; color: #0a0a0a; border: none; border-radius: 8px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+  .cta-btn:hover { opacity: 0.88; }
+  .cta-btn.secondary { background: transparent; border: 1px solid #c9a84c; color: #c9a84c; margin-top: 8px; }
+  .cta-sub { text-align: center; font-size: 11px; color: #2a2a2a; margin-top: 8px; }
+  .empty-state { text-align: center; padding: 36px 0; color: #222; font-size: 13px; }
+  .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.2; }
+  .footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid #151515; text-align: center; font-size: 10px; color: #252525; line-height: 1.8; }
+  .footer a { color: #c9a84c; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header-top">
+    <div>
+      <div class="title">DBR <span>Calculator</span></div>
+      <div class="subtitle">How much can you actually borrow in Dubai?</div>
+    </div>
+    <div class="by-line"><strong>Drishti</strong>Home Finder Real Estate<br>Dubai</div>
+  </div>
+
+  <div class="section-label">Where are you based?</div>
+  <div class="toggle-row">
+    <button class="active" id="btn-resident" onclick="setResidency('resident')">UAE Resident</button>
+    <button id="btn-international" onclick="setResidency('international')">International Buyer</button>
+  </div>
+
+  <div class="section-label">Employment type</div>
+  <div class="toggle-row">
+    <button class="active" id="btn-salaried" onclick="setEmployment('salaried')">Salaried</button>
+    <button id="btn-selfemployed" onclick="setEmployment('selfemployed')">Self Employed</button>
+  </div>
+
+  <div id="salaried-section">
+    <div class="section-label">Monthly Income</div>
+    <div class="input-row">
+      <label>Monthly salary</label>
+      <div class="input-wrap"><span class="prefix">AED</span><input type="number" id="salary" placeholder="25,000" oninput="calculate()" /></div>
+      <div class="helper" id="salary-helper">UAE residents: minimum AED 10,000 to AED 25,000 depending on bank</div>
+    </div>
+  </div>
+
+  <div id="selfemployed-section" class="hidden">
+    <div class="section-label">Business Income Calculation</div>
+    <div class="self-emp-box">
+      <div class="input-row">
+        <label>Monthly business turnover</label>
+        <div class="input-wrap"><span class="prefix">AED</span><input type="number" id="turnover" placeholder="500,000" oninput="calcSelfEmp()" /></div>
+      </div>
+      <div class="input-row">
+        <label>Bank applied profit margin (%)</label>
+        <div class="input-wrap pct"><span class="prefix">%</span><input type="number" id="profit-margin" placeholder="10" value="10" oninput="calcSelfEmp()" /></div>
+        <div class="helper">Bank typically applies 10% profit to your monthly turnover</div>
+      </div>
+      <div class="input-row">
+        <label>Your equity share in business (%)</label>
+        <div class="input-wrap pct"><span class="prefix">%</span><input type="number" id="equity-share" placeholder="50" value="50" oninput="calcSelfEmp()" /></div>
+      </div>
+      <div class="self-emp-result">
+        <div class="self-emp-label">Your considered monthly income</div>
+        <div class="self-emp-value" id="considered-income">AED 0</div>
+      </div>
+    </div>
+    <div class="helper" style="margin-bottom:10px;color:#333">Minimum business age: 1 year. Minimum considered income to qualify: AED 25,000 per month.</div>
+  </div>
+
+  <div class="section-label">Existing Monthly Debt Obligations</div>
+  <div class="debt-box">
+    <div class="debt-row"><label>Existing mortgage(s)</label><div class="input-wrap"><span class="prefix">AED</span><input type="number" id="debt-mortgage" placeholder="0" oninput="calculate()" /></div></div>
+    <div class="debt-row"><label>Car loan</label><div class="input-wrap"><span class="prefix">AED</span><input type="number" id="debt-car" placeholder="0" oninput="calculate()" /></div></div>
+    <div class="debt-row"><label>Personal loan</label><div class="input-wrap"><span class="prefix">AED</span><input type="number" id="debt-personal" placeholder="0" oninput="calculate()" /></div></div>
+    <div class="debt-row"><label>Credit card minimums</label><div class="input-wrap"><span class="prefix">AED</span><input type="number" id="debt-cc" placeholder="0" oninput="calculate()" /></div></div>
+    <div class="debt-row"><label>Other obligations</label><div class="input-wrap"><span class="prefix">AED</span><input type="number" id="debt-other" placeholder="0" oninput="calculate()" /></div></div>
+  </div>
+
+  <div class="new-mortgage-box">
+    <div class="new-mortgage-title">New mortgage you are considering</div>
+    <div class="input-row">
+      <label>Property price</label>
+      <div class="input-wrap"><span class="prefix">AED</span><input type="number" id="property-price" placeholder="1,200,000" oninput="calculate()" /></div>
+    </div>
+    <div class="input-row">
+      <label>Interest rate scenario</label>
+      <div class="input-wrap no-prefix">
+        <select id="interest-rate" onchange="calculate()">
+          <option value="3.75">Conservative — 3.75% (best case)</option>
+          <option value="4.5" selected>Moderate — 4.5% (typical)</option>
+          <option value="5.5">Cautious — 5.5% (stress test)</option>
+          <option value="6.25">Worst case — 6.25%</option>
+        </select>
+      </div>
+      <div class="helper">Actual rate depends on your bank and profile. Rates range from 3.75% to 6.25%.</div>
+    </div>
+    <div class="input-row">
+      <label>Mortgage term (years)</label>
+      <div class="input-wrap pct"><span class="prefix">yr</span><input type="number" id="mortgage-term" placeholder="25" value="25" oninput="calculate()" /></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- NOT ELIGIBLE CARD -->
+  <div class="not-eligible-card" id="not-eligible-card">
+    <div class="ne-title">You do not currently meet the minimum income requirement.</div>
+    <div class="ne-subtitle" id="ne-label">—</div>
+    <div class="ne-row"><div class="ne-key">Your current considered income</div><div class="ne-val red" id="ne-current">—</div></div>
+    <div class="ne-row"><div class="ne-key">Minimum required to qualify</div><div class="ne-val gold" id="ne-required">—</div></div>
+    <div class="ne-gap" id="ne-gap">—</div>
+    <div class="ne-note">Every bank has different assessment criteria. There may still be options available depending on your full financial profile. Speak with a mortgage consultant before ruling anything out.</div>
+    <button class="cta-btn" onclick="window.open('https://www.instagram.com/drishtichomal/','_blank')">Ask Drishti — let's see what's possible →</button>
+    <div class="cta-sub">DM on Instagram · Home Finder Real Estate Dubai</div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="result-card" id="result-card">
+
+    <div class="dbr-gauge">
+      <div class="dbr-gauge-label">Your DBR with new mortgage</div>
+      <div class="dbr-number" id="dbr-number">—</div>
+      <div class="dbr-badge" id="dbr-badge">—</div>
+      <div class="dbr-bar-wrap"><div class="dbr-bar" id="dbr-bar"></div></div>
+      <div class="dbr-bar-labels"><span>0%</span><span style="color:#1D9E75">Safe</span><span style="color:#EF9F27">Tight</span><span style="color:#E24B4A">50% Limit</span></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-box"><div class="metric-label">Monthly income</div><div class="metric-val gold" id="m-income">—</div><div class="metric-sub">Considered by bank</div></div>
+      <div class="metric-box"><div class="metric-label">DBR limit (50%)</div><div class="metric-val" id="m-limit">—</div><div class="metric-sub">Max monthly obligations</div></div>
+      <div class="metric-box"><div class="metric-label">Current obligations</div><div class="metric-val" id="m-existing">—</div><div class="metric-sub">Before new mortgage</div></div>
+      <div class="metric-box"><div class="metric-label">Remaining capacity</div><div class="metric-val" id="m-remaining">—</div><div class="metric-sub">Available for new debt</div></div>
+    </div>
+
+    <div class="bdown" id="mortgage-section" style="display:none">
+      <div class="bdown-title">New mortgage breakdown</div>
+      <div class="bdown-row"><div class="bdown-key">Property price</div><div class="bdown-val" id="b-price">—</div></div>
+      <div class="bdown-row"><div class="bdown-key">Maximum LTV</div><div class="bdown-val" id="b-ltv">—</div></div>
+      <div class="bdown-row"><div class="bdown-key">Maximum loan amount</div><div class="bdown-val" id="b-loan">—</div></div>
+      <div class="bdown-row"><div class="bdown-key">Down payment required</div><div class="bdown-val" id="b-down">—</div></div>
+      <div class="bdown-row highlight"><div class="bdown-key">Estimated monthly payment</div><div class="bdown-val" id="b-monthly">—</div></div>
+      <div class="bdown-row total"><div class="bdown-key">DBR after this mortgage</div><div class="bdown-val" id="b-dbr-after">—</div></div>
+    </div>
+
+    <div class="verdict-box" id="verdict-box">
+      <div class="verdict-title" id="verdict-title">—</div>
+      <div class="verdict-desc" id="verdict-desc">—</div>
+    </div>
+
+    <div class="tips-box" id="tips-box" style="display:none">
+      <div class="tips-title">How to improve your DBR</div>
+      <div class="tip-row"><div class="tip-number">1</div><div class="tip-text">Clear your smallest loans first — reduces monthly obligations fastest and improves DBR immediately.</div></div>
+      <div class="tip-row"><div class="tip-number">2</div><div class="tip-text">Cancel credit cards you do not use — unused limits still count against your DBR in some bank assessments.</div></div>
+      <div class="tip-row"><div class="tip-number">3</div><div class="tip-text">Extend your existing mortgage term — reduces monthly payment and frees up DBR capacity.</div></div>
+      <div class="tip-row"><div class="tip-number">4</div><div class="tip-text">Consolidate multiple loans into one lower monthly payment before applying.</div></div>
+      <div class="tip-row"><div class="tip-number">5</div><div class="tip-text">Add a co-borrower — splits the DBR calculation across two incomes and doubles your capacity.</div></div>
+    </div>
+
+    <div class="eligibility-box">
+      <div class="eligibility-title">Your eligibility profile</div>
+      <div class="elig-row"><div class="elig-key">Residency</div><div class="elig-val" id="e-residency">—</div></div>
+      <div class="elig-row"><div class="elig-key">Employment</div><div class="elig-val" id="e-employment">—</div></div>
+      <div class="elig-row"><div class="elig-key">Minimum rate available</div><div class="elig-val" id="e-rate">—</div></div>
+      <div class="elig-row"><div class="elig-key">Maximum LTV</div><div class="elig-val" id="e-ltv">—</div></div>
+      <div class="elig-row"><div class="elig-key">Off plan eligible</div><div class="elig-val" id="e-offplan">—</div></div>
+      <div class="elig-row"><div class="elig-key">Pre approval validity</div><div class="elig-val">30 days</div></div>
+    </div>
+
+    <button class="cta-btn" onclick="window.open('https://www.instagram.com/drishtichomal/','_blank')">Talk to Drishti about your mortgage →</button>
+    <div class="cta-sub">DM on Instagram · Home Finder Real Estate Dubai</div>
+
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">◎</div>
+    Enter your details above to calculate your DBR and borrowing capacity
+  </div>
+
+  <div class="footer">
+    Built by Drishti · Home Finder Real Estate Dubai<br>
+    <a href="https://www.instagram.com/drishtichomal/" target="_blank">Follow on Instagram</a> for more Dubai property math
+  </div>
+</div>
+
+<script>
+let residency = 'resident';
+let employment = 'salaried';
+
+function setResidency(type) {
+  residency = type;
+  document.getElementById('btn-resident').classList.toggle('active', type === 'resident');
+  document.getElementById('btn-international').classList.toggle('active', type === 'international');
+  document.getElementById('salary-helper').textContent = type === 'resident'
+    ? 'UAE residents: minimum AED 10,000 to AED 25,000 depending on bank'
+    : 'International buyers: minimum AED 18,000 salaried. AED 25,000 self employed.';
+  calculate();
+}
+
+function setEmployment(type) {
+  employment = type;
+  document.getElementById('btn-salaried').classList.toggle('active', type === 'salaried');
+  document.getElementById('btn-selfemployed').classList.toggle('active', type === 'selfemployed');
+  document.getElementById('salaried-section').classList.toggle('hidden', type === 'selfemployed');
+  document.getElementById('selfemployed-section').classList.toggle('hidden', type === 'salaried');
+  calculate();
+}
+
+function calcSelfEmp() {
+  const turnover = parseFloat(document.getElementById('turnover').value) || 0;
+  const profitPct = parseFloat(document.getElementById('profit-margin').value) || 0;
+  const equityPct = parseFloat(document.getElementById('equity-share').value) || 0;
+  const considered = turnover * (profitPct / 100) * (equityPct / 100);
+  document.getElementById('considered-income').textContent = 'AED ' + Math.round(considered).toLocaleString();
+  calculate();
+}
+
+function fmt(n) { return 'AED ' + Math.round(Math.abs(n)).toLocaleString(); }
+
+function getMortgagePayment(principal, annualRate, years) {
+  if (!principal || !annualRate || !years) return 0;
+  const r = (annualRate / 100) / 12;
+  const n = years * 12;
+  return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+function getMinIncome() {
+  if (residency === 'resident' && employment === 'salaried') return { min: 10000, label: 'UAE resident salaried: minimum AED 10,000 per month (AED 25,000 at most banks)' };
+  if (residency === 'resident' && employment === 'selfemployed') return { min: 25000, label: 'UAE resident self employed: minimum considered income AED 25,000 per month' };
+  if (residency === 'international' && employment === 'salaried') return { min: 18000, label: 'International salaried buyers: minimum AED 18,000 per month' };
+  if (residency === 'international' && employment === 'selfemployed') return { min: 25000, label: 'International self employed buyers: minimum considered income AED 25,000 per month' };
+  return { min: 0, label: '' };
+}
+
+function calculate() {
+  let monthlyIncome = 0;
+  if (employment === 'salaried') {
+    monthlyIncome = parseFloat(document.getElementById('salary').value) || 0;
+  } else {
+    const turnover = parseFloat(document.getElementById('turnover').value) || 0;
+    const profitPct = parseFloat(document.getElementById('profit-margin').value) || 0;
+    const equityPct = parseFloat(document.getElementById('equity-share').value) || 0;
+    monthlyIncome = turnover * (profitPct / 100) * (equityPct / 100);
+  }
+
+  if (!monthlyIncome) {
+    document.getElementById('result-card').classList.remove('visible');
+    document.getElementById('not-eligible-card').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+
+  // Check minimum income eligibility
+  const { min, label } = getMinIncome();
+  const notEligibleCard = document.getElementById('not-eligible-card');
+
+  if (monthlyIncome < min) {
+    document.getElementById('result-card').classList.remove('visible');
+    document.getElementById('empty-state').style.display = 'none';
+    notEligibleCard.style.display = 'block';
+    document.getElementById('ne-current').textContent = fmt(monthlyIncome) + ' per month';
+    document.getElementById('ne-required').textContent = fmt(min) + ' per month';
+    document.getElementById('ne-gap').textContent = 'You need AED ' + Math.round(min - monthlyIncome).toLocaleString() + ' more per month to meet the minimum requirement.';
+    document.getElementById('ne-label').textContent = label;
+    return;
+  }
+
+  notEligibleCard.style.display = 'none';
+
+  const debtMortgage = parseFloat(document.getElementById('debt-mortgage').value) || 0;
+  const debtCar = parseFloat(document.getElementById('debt-car').value) || 0;
+  const debtPersonal = parseFloat(document.getElementById('debt-personal').value) || 0;
+  const debtCC = parseFloat(document.getElementById('debt-cc').value) || 0;
+  const debtOther = parseFloat(document.getElementById('debt-other').value) || 0;
+  const totalExisting = debtMortgage + debtCar + debtPersonal + debtCC + debtOther;
+
+  const propertyPrice = parseFloat(document.getElementById('property-price').value) || 0;
+  const interestRate = parseFloat(document.getElementById('interest-rate').value) || 4.5;
+  const mortgageTerm = parseFloat(document.getElementById('mortgage-term').value) || 25;
+
+  const maxLTV = residency === 'resident' ? 0.80 : 0.50;
+  const maxLoan = propertyPrice * maxLTV;
+  const downPayment = propertyPrice - maxLoan;
+  const newMortgagePayment = propertyPrice ? getMortgagePayment(maxLoan, interestRate, mortgageTerm) : 0;
+  const totalObligations = totalExisting + newMortgagePayment;
+  const dbrLimit = monthlyIncome * 0.5;
+  const newDBR = (totalObligations / monthlyIncome) * 100;
+  const currentDBR = (totalExisting / monthlyIncome) * 100;
+  const remaining = dbrLimit - totalExisting;
+  const displayDBR = propertyPrice ? newDBR : currentDBR;
+
+  document.getElementById('result-card').classList.add('visible');
+  document.getElementById('empty-state').style.display = 'none';
+
+  // DBR gauge
+  const dbrEl = document.getElementById('dbr-number');
+  const dbrBadge = document.getElementById('dbr-badge');
+  const dbrBar = document.getElementById('dbr-bar');
+  dbrEl.textContent = displayDBR.toFixed(1) + '%';
+  dbrBar.style.width = Math.min(displayDBR, 100) + '%';
+
+  if (displayDBR > 50) {
+    dbrEl.style.color = '#E24B4A'; dbrBadge.textContent = 'Exceeds UAE limit';
+    dbrBadge.style.background = 'rgba(226,75,74,0.12)'; dbrBadge.style.color = '#E24B4A';
+    dbrBar.style.background = '#E24B4A';
+  } else if (displayDBR > 40) {
+    dbrEl.style.color = '#EF9F27'; dbrBadge.textContent = 'Tight — limited capacity';
+    dbrBadge.style.background = 'rgba(239,159,39,0.12)'; dbrBadge.style.color = '#EF9F27';
+    dbrBar.style.background = '#EF9F27';
+  } else {
+    dbrEl.style.color = '#1D9E75'; dbrBadge.textContent = 'Healthy borrowing capacity';
+    dbrBadge.style.background = 'rgba(29,158,117,0.12)'; dbrBadge.style.color = '#1D9E75';
+    dbrBar.style.background = '#1D9E75';
+  }
+
+  // Metrics
+  document.getElementById('m-income').textContent = fmt(monthlyIncome);
+  document.getElementById('m-limit').textContent = fmt(dbrLimit);
+  document.getElementById('m-existing').textContent = fmt(totalExisting);
+  const remEl = document.getElementById('m-remaining');
+  remEl.textContent = remaining > 0 ? fmt(remaining) : 'AED 0';
+  remEl.className = 'metric-val ' + (remaining > 0 ? 'green' : 'red');
+
+  // Mortgage breakdown
+  if (propertyPrice) {
+    document.getElementById('mortgage-section').style.display = 'block';
+    document.getElementById('b-price').textContent = fmt(propertyPrice);
+    document.getElementById('b-ltv').textContent = (maxLTV * 100) + '%';
+    document.getElementById('b-loan').textContent = fmt(maxLoan);
+    document.getElementById('b-down').textContent = fmt(downPayment);
+    document.getElementById('b-monthly').textContent = fmt(newMortgagePayment) + ' per month';
+    document.getElementById('b-dbr-after').textContent = newDBR.toFixed(1) + '%';
+  } else {
+    document.getElementById('mortgage-section').style.display = 'none';
+  }
+
+  // Verdict
+  const vBox = document.getElementById('verdict-box');
+  const vTitle = document.getElementById('verdict-title');
+  const vDesc = document.getElementById('verdict-desc');
+  const tips = document.getElementById('tips-box');
+
+  if (displayDBR > 50) {
+    vBox.className = 'verdict-box danger';
+    vTitle.textContent = 'You will be declined at this DBR.';
+    vDesc.textContent = 'Your total monthly obligations exceed 50% of your income. UAE Central Bank regulation prevents any bank from lending to you at this level. You need to reduce existing debt before applying. See improvement steps below.';
+    tips.style.display = 'block';
+  } else if (displayDBR > 40) {
+    vBox.className = 'verdict-box warning';
+    vTitle.textContent = 'You are close to the limit.';
+    vDesc.textContent = 'Your DBR is tight. You may get approved but with conditions. Any additional debt before applying could push you over the limit. Consider clearing smaller obligations first.';
+    tips.style.display = 'block';
+  } else {
+    vBox.className = 'verdict-box safe';
+    vTitle.textContent = 'You have healthy borrowing capacity.';
+    vDesc.textContent = 'Your DBR is within safe limits. You have room to take on a new mortgage without hitting the UAE Central Bank ceiling. Apply for pre-approval to lock in your rate for 30 days.';
+    tips.style.display = 'none';
+  }
+
+  // Eligibility profile
+  document.getElementById('e-residency').textContent = residency === 'resident' ? 'UAE Resident' : 'International Buyer';
+  document.getElementById('e-employment').textContent = employment === 'salaried' ? 'Salaried' : 'Self Employed';
+  document.getElementById('e-rate').textContent = residency === 'resident' ? 'From 3.75%' : 'From 4.5%';
+  document.getElementById('e-ltv').textContent = residency === 'resident' ? 'Up to 80%' : 'Up to 50%';
+  document.getElementById('e-offplan').textContent = residency === 'resident' ? 'Yes' : 'No — secondary market only';
+}
+
+setResidency('resident');
+setEmployment('salaried');
+</script>
+</body>
+</html>
